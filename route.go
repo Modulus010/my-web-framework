@@ -12,9 +12,18 @@ type Param struct {
 
 type Params []Param
 
+func (ps Params) ByName(key string) string {
+	for _, entry := range ps {
+		if entry.Key == key {
+			return entry.Value
+		}
+	}
+	return ""
+}
+
 type methodRoute struct {
 	method string
-	nodes  []node
+	nodes  []*node
 }
 
 func (r *methodRoute) addRoute(path string, handlers HandlersChain) {
@@ -41,7 +50,7 @@ func (r *methodRoute) addRoute(path string, handlers HandlersChain) {
 		panic(err)
 	}
 
-	r.nodes = append(r.nodes, node{
+	r.nodes = append(r.nodes, &node{
 		regex:    regex,
 		params:   params,
 		handlers: handlers,
