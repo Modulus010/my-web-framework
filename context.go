@@ -93,7 +93,7 @@ func (c *Context) HTML(code int, html string) {
 	c.Writer.Write([]byte(html))
 }
 
-func (c *Context) JSON(code int, obj interface{}) {
+func (c *Context) JSON(code int, obj any) {
 	c.Header("Content-Type", "application/json")
 	c.Status(code)
 	encoder := json.NewEncoder(c.Writer)
@@ -102,7 +102,7 @@ func (c *Context) JSON(code int, obj interface{}) {
 	}
 }
 
-func (c *Context) String(code int, format string, values ...interface{}) {
+func (c *Context) String(code int, format string, values ...any) {
 	c.Header("Content-Type", "text/plain")
 	c.Status(code)
 	c.Writer.Write([]byte(fmt.Sprintf(format, values...)))

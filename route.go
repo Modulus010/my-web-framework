@@ -80,9 +80,9 @@ func (r *methodRoute) getValue(path string) (HandlersChain, Params) {
 type methodRoutes []methodRoute
 
 func (routes methodRoutes) get(method string) *methodRoute {
-	for _, r := range routes {
-		if r.method == method {
-			return &r
+	for i := range routes {
+		if routes[i].method == method {
+			return &routes[i]
 		}
 	}
 	return nil

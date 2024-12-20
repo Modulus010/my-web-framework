@@ -43,11 +43,12 @@ func (engine *Engine) handleHTTPRequest(c *Context) {
 	httpMethod := c.Request.Method
 	rPath := c.Request.URL.Path
 	route := engine.routes.get(httpMethod)
-
-	c.handlers, c.Params = route.getValue(rPath)
-	if c.handlers != nil {
-		c.Next()
-		return
+	if route != nil {
+		c.handlers, c.Params = route.getValue(rPath)
+		if c.handlers != nil {
+			c.Next()
+			return
+		}
 	}
 	http.NotFound(c.Writer, c.Request)
 }
