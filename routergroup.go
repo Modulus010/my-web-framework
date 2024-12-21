@@ -1,6 +1,9 @@
 package wfw
 
-import "net/http"
+import (
+	"net/http"
+	"path"
+)
 
 type IRoutes interface {
 	Use(...HandlerFunc) IRoutes
@@ -10,6 +13,8 @@ type IRoutes interface {
 	POST(string, ...HandlerFunc) IRoutes
 	PUT(string, ...HandlerFunc) IRoutes
 	DELETE(string, ...HandlerFunc) IRoutes
+
+	Static(string, string) IRoutes
 }
 
 type RouterGroup struct {
@@ -59,6 +64,30 @@ func (group *RouterGroup) DELETE(relativePath string, handlers ...HandlerFunc) I
 	return group.handle(http.MethodDelete, relativePath, handlers)
 }
 
+func (group *RouterGroup) Static(relativePath, root string) IRoutes {
+	handler := group.createStaticHandler(relativePath, http.Dir(root))
+	urlPattern := path.Join(relativePath, "/*filepath")
+	group.GET(urlPattern, handler)
+	return group.returnObj()
+}
+
+func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileSystem) HandlerFunc {
+	absolutePath := group.calculateAbsolutePath(relativePath)
+	fileServer := http.StripPrefix(absolutePath, http.FileServer(fs))
+
+	return func(c *Context) {
+		file := c.Param("filepath")
+		f, err := fs.Open(file)
+		if err != nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		f.Close()
+
+		fileServer.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
 func (group *RouterGroup) combineHandlers(handlers HandlersChain) HandlersChain {
 	finalSize := len(group.Handlers) + len(handlers)
 	mergedHandlers := make(HandlersChain, finalSize)
@@ -68,7 +97,7 @@ func (group *RouterGroup) combineHandlers(handlers HandlersChain) HandlersChain 
 }
 
 func (group *RouterGroup) calculateAbsolutePath(relativePath string) string {
-	return group.basePath + relativePath
+	return path.Join(group.basePath, relativePath)
 }
 
 func (group *RouterGroup) returnObj() IRoutes {

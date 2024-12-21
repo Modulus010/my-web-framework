@@ -1,6 +1,9 @@
 package wfw
 
-import "net/http"
+import (
+	"html/template"
+	"net/http"
+)
 
 type HandlerFunc func(*Context)
 
@@ -8,7 +11,10 @@ type HandlersChain []HandlerFunc
 
 type Engine struct {
 	RouterGroup
-	routes methodRoutes
+
+	HTMLTemplate *template.Template
+	FuncMap template.FuncMap
+	routes  methodRoutes
 }
 
 func New() *Engine {
@@ -19,6 +25,20 @@ func New() *Engine {
 	}
 	engine.RouterGroup.engine = engine
 	return engine
+}
+
+func Default() *Engine {
+	engine := New()
+	engine.Use(Logger(), Recovery())
+	return engine	
+}
+
+func (engine *Engine) LoadHTMLGlob(pattern string) {
+	engine.HTMLTemplate = template.Must(template.New("").Funcs(engine.FuncMap).ParseGlob(pattern))
+}
+
+func (engine *Engine) SetFuncMap(funcMap template.FuncMap) {
+	engine.FuncMap = funcMap
 }
 
 func (engine *Engine) addRoute(method, path string, handlers HandlersChain) {
@@ -36,6 +56,7 @@ func (engine *Engine) Run(addr string) error {
 
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c := newContext(w, r)
+	c.engine = engine
 	engine.handleHTTPRequest(c)
 }
 

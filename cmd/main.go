@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	r := wfw.New()
+	r := wfw.Default()
 	r.GET("/ping", func(c *wfw.Context) {
 		c.JSON(200, wfw.H{
 			"message": "pong",

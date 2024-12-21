@@ -1,6 +1,7 @@
 package wfw
 
 import (
+	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -30,5 +31,30 @@ func TestEngine_NotFound(t *testing.T) {
 
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("Expected status code %d, but got %d", http.StatusNotFound, w.Code)
+	}
+}
+
+func TestEngine_LoadHTMLGlob(t *testing.T) {
+	engine := New()
+	engine.LoadHTMLGlob("templates/*")
+
+	if engine.HTMLTemplate == nil {
+		t.Fatal("Expected HTMLTemplate to be loaded, but it was nil")
+	}
+}
+
+func TestEngine_SetFuncMap(t *testing.T) {
+	engine := New()
+	funcMap := template.FuncMap{
+		"testFunc": func() string { return "test" },
+	}
+	engine.SetFuncMap(funcMap)
+
+	if engine.FuncMap == nil {
+		t.Fatal("Expected FuncMap to be set, but it was nil")
+	}
+
+	if _, exists := engine.FuncMap["testFunc"]; !exists {
+		t.Fatal("Expected FuncMap to contain 'testFunc', but it did not")
 	}
 }

@@ -8,12 +8,15 @@ import (
 )
 
 type Context struct {
-	Writer  http.ResponseWriter
-	Request *http.Request
+	Writer     http.ResponseWriter
+	Request    *http.Request
+	StatusCode int
 
 	Params   Params
 	handlers HandlersChain
 	index    int8
+
+	engine *Engine
 
 	Keys map[string]any
 
@@ -76,6 +79,7 @@ func (c *Context) PostForm(key string) string {
 }
 
 func (c *Context) Status(code int) {
+	c.StatusCode = code
 	c.Writer.WriteHeader(code)
 }
 
@@ -87,10 +91,12 @@ func (c *Context) Header(key, value string) {
 	c.Writer.Header().Set(key, value)
 }
 
-func (c *Context) HTML(code int, html string) {
+func (c *Context) HTML(code int, name string, obj any) {
 	c.Header("Content-Type", "text/html")
 	c.Status(code)
-	c.Writer.Write([]byte(html))
+	if err := c.engine.HTMLTemplate.ExecuteTemplate(c.Writer, name, obj); err != nil {
+		http.Error(c.Writer, err.Error(), 500)
+	}
 }
 
 func (c *Context) JSON(code int, obj any) {
