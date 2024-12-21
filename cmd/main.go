@@ -1,7 +1,7 @@
 package main
 
 import (
-	wfw "github.com/Modulus010/my-web-framework"
+	"github.com/Modulus010/my-web-framework"
 )
 
 func main() {
